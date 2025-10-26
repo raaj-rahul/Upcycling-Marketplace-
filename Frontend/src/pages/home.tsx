@@ -36,7 +36,7 @@ const Home: React.FC = () => {
                     variant="outline"
                     className="border-emerald-700 text-emerald-900 hover:bg-emerald-50"
                   >
-                    Learn More
+                    Sell Products
                   </Button>
                 </div>
               </div>
