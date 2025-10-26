@@ -7,9 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { addToCart, addToWishlist } from "../lib/shop";
 import type { Product } from "../lib/shop";
 import { getUserProducts, USER_PRODUCTS_KEY } from "../lib/products";
-import { toast } from "sonner"; // ✅ Sonner
+import { loadListings, LISTINGS_LS_KEY } from "@/lib/listings"; // 🔥 NEW
+import { toast } from "sonner";
 
-// static asset URLs (your existing images)
+// static asset URLs
 import seedImg from "../assets/seed.jpg";
 import shellImg from "../assets/shell.jpg";
 import tableImg from "../assets/table.jpg";
@@ -17,7 +18,6 @@ import paperImg from "../assets/paper.jpg";
 import hangImg from "../assets/hang.jpg";
 import coconutImg from "../assets/coconut.jpg";
 
-// -------- Static products --------
 const staticProducts: Product[] = [
   {
     id: 1,
@@ -94,27 +94,37 @@ const staticProducts: Product[] = [
 ];
 
 const BuyProducts: React.FC = () => {
-  // Merge static + user-added
-  const initial = React.useMemo<Product[]>(
-    () => [...staticProducts, ...getUserProducts()],
-    []
-  );
-  const [items, setItems] = useState<Product[]>(initial);
+  const [items, setItems] = useState<Product[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  // Refresh when user saves a product from Sell page
+  // Merge static + user-added BUT hide user items whose listing is inactive
+  const refresh = React.useCallback(() => {
+    const listings = loadListings();
+    const activeIds = new Set(listings.filter((l) => l.active).map((l) => l.id));
+
+    const user = getUserProducts().filter(
+      (p) => !p.listingId || activeIds.has(p.listingId) // keep if no link, or linked & active
+    );
+
+    setItems([...staticProducts, ...user]);
+  }, []);
+
   React.useEffect(() => {
-    const refresh = () => setItems([...staticProducts, ...getUserProducts()]);
+    // initial load
+    refresh();
+
+    // listen to both products and listings changes
     const onStorage = (e: StorageEvent) => {
-      if (!e.key || e.key === USER_PRODUCTS_KEY) refresh();
+      if (!e.key || e.key === USER_PRODUCTS_KEY || e.key === LISTINGS_LS_KEY) {
+        refresh();
+      }
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [refresh]);
 
-  const selected: Product | null =
-    selectedIndex !== null ? items[selectedIndex] : null;
+  const selected: Product | null = selectedIndex !== null ? items[selectedIndex] : null;
 
   const nextProduct = () => {
     if (selectedIndex !== null) {
@@ -131,7 +141,6 @@ const BuyProducts: React.FC = () => {
   const handleAddToCart = (p: Product) => {
     addToCart(p, 1);
     toast.success("Added to cart", { description: `${p.name} was added to your cart.` });
-    // stay on page; user can keep browsing
   };
 
   const handleAddToWishlist = (p: Product) => {

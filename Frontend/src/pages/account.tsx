@@ -15,13 +15,13 @@ import {
   isAuthed,
 } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
+import { Package2, PackagePlus } from "lucide-react"; // ✅ NEW: icons for quick actions
 
 const AccountPage: React.FC = () => {
   const navigate = useNavigate();
 
   // profile state
   const [name, setName] = React.useState("");
-
   const [location, setLocation] = React.useState("");
   const [email, setEmail] = React.useState("");
 
@@ -55,10 +55,7 @@ const AccountPage: React.FC = () => {
   const resetPwErrors = () => setPwError(null);
 
   const updatePw = () => {
-    // Clear previous inline error
     resetPwErrors();
-
-    // Client-side checks
     if (!oldPw) {
       setPwError("Please enter your current password.");
       oldPwRef.current?.focus();
@@ -76,8 +73,6 @@ const AccountPage: React.FC = () => {
       setPwError("Passwords do not match.");
       return;
     }
-
-    // "Backend" check (localStorage demo)
     const res = changePassword(oldPw, newPw);
     if (!res.ok) {
       setPwError(res.error || "Could not update password.");
@@ -85,7 +80,6 @@ const AccountPage: React.FC = () => {
       toast.error("Could not update password", { description: res.error });
       return;
     }
-
     setOldPw("");
     setNewPw("");
     setConfirmPw("");
@@ -112,7 +106,32 @@ const AccountPage: React.FC = () => {
       <Header showActions />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <h1 className="text-2xl font-bold text-emerald-900">Your Profile</h1>
+        {/* Title + Quick Actions */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-bold text-emerald-900">Your Profile</h1>
+
+          {/* ✅ Quick action buttons (right side) */}
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/orders")}
+              className="justify-center"
+              aria-label="Go to My Orders"
+            >
+              <Package2 className="mr-2 h-4 w-4" />
+              My Orders
+            </Button>
+            <Button
+              onClick={() => navigate("/my-listings")}
+              className="bg-emerald-700 hover:bg-emerald-800 justify-center"
+              aria-label="Go to My Listings"
+            >
+              <PackagePlus className="mr-2 h-4 w-4" />
+              My Listings
+            </Button>
+          </div>
+        </div>
+
         <Separator className="my-4" />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

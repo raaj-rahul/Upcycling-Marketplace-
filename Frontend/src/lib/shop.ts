@@ -9,6 +9,9 @@ export type Product = {
   description: string;
   rating: number;
   stock: number;
+
+  // Link to My Listings row so we can sync delete/edit
+  listingId?: string;
 };
 
 export type CartItem = { product: Product; qty: number };

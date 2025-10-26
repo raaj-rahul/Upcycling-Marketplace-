@@ -12,7 +12,9 @@ import WasteSubmitPage from "./pages/waste-submit"
 import WishlistPage from "./pages/wishlist"
 import CartPage from "./pages/cart"
 import CheckoutPage from "./pages/checkout"
-import AccountPage from "./pages/account";
+import AccountPage from "./pages/account"
+import OrdersPage from "./pages/orders"
+import MyListingsPage from "./pages/my-listings";
 
 const App: React.FC = () => {
   return (
@@ -29,8 +31,10 @@ const App: React.FC = () => {
         <Route path="/waste-donation/submit" element={<WasteSubmitPage />} />
         <Route path="/wishlist" element={<WishlistPage />} /> 
         <Route path="/cart" element={<CartPage />} /> 
-        <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/account" element={<AccountPage />} />  
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/my-listings" element={<MyListingsPage />} />    
         {/* optional: 404 page */}
         {/* <Route path="*" element={<div className="p-6">Page Not Found</div>} /> */}
       </Routes>
