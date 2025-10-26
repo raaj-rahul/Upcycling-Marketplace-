@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/layout/header";
 import heroIllustration from "@/assets/hero-illustration.png";
+import { useNavigate } from "react-router-dom";
 
 const Home: React.FC = () => {
+  const navigate = useNavigate(); // ✅ for redirect
+
   return (
     <div className="min-h-screen bg-emerald-50">
-      <Header /> 
+      <Header />
 
       {/* HERO */}
       <main>
@@ -31,10 +34,19 @@ const Home: React.FC = () => {
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <Button className="bg-emerald-700 hover:bg-emerald-800">Explore Products</Button>
+                  {/* ✅ Buy Route */}
+                  <Button
+                    className="bg-emerald-700 hover:bg-emerald-800"
+                    onClick={() => navigate("/buy")}
+                  >
+                    Explore Products
+                  </Button>
+
+                  {/* ✅ Sell Route */}
                   <Button
                     variant="outline"
                     className="border-emerald-700 text-emerald-900 hover:bg-emerald-50"
+                    onClick={() => navigate("/sell")}
                   >
                     Sell Products
                   </Button>
@@ -49,7 +61,6 @@ const Home: React.FC = () => {
                     alt="Sustainable crafting illustration"
                     className="block h-auto w-full object-contain"
                   />
-                  {/* gentle corner glow */}
                   <div className="pointer-events-none absolute -inset-2 rounded-3xl bg-gradient-to-tr from-transparent via-transparent to-emerald-100/40" />
                 </div>
               </div>

@@ -4,6 +4,8 @@ import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import About from "@/pages/about";
+import Sell from "./pages/sell";
+import SellNew from "./pages/sell-new";
 
 const App: React.FC = () => {
   return (
@@ -13,6 +15,8 @@ const App: React.FC = () => {
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/sell" element={<Sell />} />
+        <Route path="/sell/new" element={<SellNew />} />
         {/* optional: 404 */}
         {/* <Route path="*" element={<div className="p-6">Not Found</div>} /> */}
       </Routes>
