@@ -9,7 +9,8 @@ const Sell: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-emerald-50">
+    <div className="min-h-screen bg-[radial-gradient(60%_60%_at_50%_0%,#E8F7EF_0%,#ffffff_60%)]">
+
       <Header />
 
       <main>
