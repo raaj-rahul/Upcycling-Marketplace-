@@ -1,3 +1,4 @@
+// src/pages/waste-submit.tsx
 import React from "react";
 import Header from "@/components/layout/header";
 import { z } from "zod";
@@ -30,40 +31,32 @@ import { Switch } from "@/components/ui/switch";
 import wasteHero from "@/assets/waste-hero.png";
 
 /* =========================================
-   ZOD SCHEMA (no name/phone/email). Date/time removed;
-   backend allocates schedule when serviceable.
+   ZOD SCHEMA
    ========================================= */
 const MAX_IMAGES = 5;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
-const PIN_REGEX = /^[1-9][0-9]{5}$/; // India-style pincode (6 digits, non-zero start)
+const PIN_REGEX = /^[1-9][0-9]{5}$/; // India 6-digit pincode
 
 const formSchema = z
   .object({
     materialType: z.string().min(2, "Please enter the material type."),
     quantity: z.string().min(1, "Please specify quantity or approx. weight."),
     condition: z.enum(["clean", "good", "broken", "mixed"], {
-      required_error: "Select a condition",
+      message: "Select a condition",
     }),
     images: z
       .array(
-        z.custom<File>((f) => f instanceof File, "Invalid file").refine(
-          (f) => f.size <= MAX_IMAGE_SIZE,
-          "Each image must be ≤ 5MB"
-        )
+        z
+          .custom<File>((f) => f instanceof File, "Invalid file")
+          .refine((f) => f.size <= MAX_IMAGE_SIZE, "Each image must be ≤ 5MB")
       )
       .max(MAX_IMAGES, `Max ${MAX_IMAGES} images`)
       .optional()
       .default([]),
-    notes: z
-      .string()
-      .max(500, "Keep it short (≤ 500 chars)")
-      .optional()
-      .default(""),
-
+    notes: z.string().max(500, "Keep it short (≤ 500 chars)").optional().default(""),
     pickup: z.boolean().default(false),
     address: z.string().optional(),
     pincode: z.string().optional(),
-
     consent: z.boolean().refine((v) => v === true, {
       message: "Please confirm you’re donating responsibly.",
     }),
@@ -87,7 +80,9 @@ const formSchema = z
     }
   });
 
-type DonationFormValues = z.infer<typeof formSchema>;
+// Align RHF with zodResolver (input vs output)
+type DonationFormInput = z.input<typeof formSchema>;
+type DonationFormOutput = z.output<typeof formSchema>;
 
 /* =========================================
    PAGE
@@ -97,18 +92,18 @@ const WasteSubmitPage: React.FC = () => {
   const [submittedId, setSubmittedId] = React.useState<string | null>(null);
 
   // Pincode serviceability local state
-  const [pinStatus, setPinStatus] = React.useState<
-    "idle" | "checking" | "ok" | "fail" | "error"
-  >("idle");
+  const [pinStatus, setPinStatus] = React.useState<"idle" | "checking" | "ok" | "fail" | "error">("idle");
   const [pinRegion, setPinRegion] = React.useState<string | null>(null);
   const [pinMessage, setPinMessage] = React.useState<string>("");
 
-  const form = useForm<DonationFormValues>({
+  // Lock RHF generics with input/output to match zodResolver
+  const form = useForm<DonationFormInput, any, DonationFormOutput>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       materialType: "",
       quantity: "",
-      condition: undefined,
+      // Select until chosen; DeepPartial allows undefined in defaults
+      condition: undefined as unknown as DonationFormInput["condition"],
       images: [],
       notes: "",
       pickup: false,
@@ -131,7 +126,8 @@ const WasteSubmitPage: React.FC = () => {
 
   // -------- API-ready pincode checker --------
   const checkPincode = async () => {
-    if (!PIN_REGEX.test(pincode || "")) {
+    const code = pincode ?? "";
+    if (!PIN_REGEX.test(code)) {
       form.setError("pincode", { message: "Enter a valid 6-digit pincode." });
       return;
     }
@@ -142,8 +138,7 @@ const WasteSubmitPage: React.FC = () => {
       setPinRegion(null);
 
       // ---- Call your backend here ----
-      // Example: GET /api/check-pincode?code=560103
-      const res = await fetch(`/api/check-pincode?code=${encodeURIComponent(String(pincode))}`);
+      const res = await fetch(`/api/check-pincode?code=${encodeURIComponent(code)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: { serviceable: boolean; region?: string; eta_days?: number } = await res.json();
 
@@ -159,24 +154,21 @@ const WasteSubmitPage: React.FC = () => {
         setPinStatus("fail");
         setPinMessage("Sorry, we don’t pick up in this area yet. You can still drop off.");
       }
-    } catch (e) {
+    } catch {
       setPinStatus("error");
       setPinMessage("Couldn’t check serviceability. Please try again.");
     }
   };
 
-  const onSubmit = async (values: DonationFormValues) => {
-    // Guard: if pickup is requested but pincode not verified serviceable
-    if (values.pickup) {
-      if (pinStatus !== "ok") {
-        form.setError("pincode", {
-          message:
-            pinStatus === "fail"
-              ? "This pincode is not serviceable for pickup."
-              : "Please verify pincode serviceability before submitting.",
-        });
-        return;
-      }
+  const onSubmit = async (values: DonationFormOutput) => {
+    if (values.pickup && pinStatus !== "ok") {
+      form.setError("pincode", {
+        message:
+          pinStatus === "fail"
+            ? "This pincode is not serviceable for pickup."
+            : "Please verify pincode serviceability before submitting.",
+      });
+      return;
     }
 
     setSubmitting(true);
@@ -185,7 +177,6 @@ const WasteSubmitPage: React.FC = () => {
     const id = "DON-" + Math.random().toString(36).slice(2, 8).toUpperCase();
     setSubmittedId(id);
 
-    // Example payload you would POST to backend
     const payload = {
       id,
       ...values,
@@ -193,14 +184,13 @@ const WasteSubmitPage: React.FC = () => {
       region: pinRegion,
     };
     // await fetch("/api/donations", { method: "POST", body: JSON.stringify(payload) })
-
     localStorage.setItem("last_waste_donation", JSON.stringify(payload));
 
     const keepPickup = values.pickup;
     form.reset({
       materialType: "",
       quantity: "",
-      condition: undefined,
+      condition: undefined as unknown as DonationFormInput["condition"],
       images: [],
       notes: "",
       pickup: keepPickup,
@@ -209,11 +199,9 @@ const WasteSubmitPage: React.FC = () => {
       consent: false,
     });
 
-    // Reset pin status after submit
     setPinStatus("idle");
     setPinRegion(null);
     setPinMessage("");
-
     setSubmitting(false);
   };
 
@@ -239,9 +227,7 @@ const WasteSubmitPage: React.FC = () => {
       <main className="bg-[radial-gradient(60%_60%_at_50%_0%,#E8F7EF_0%,#ffffff_60%)]">
         <section className="container mx-auto max-w-6xl px-4 py-6 sm:py-10">
           <div className="mb-6 sm:mb-8">
-            <h1 className="text-3xl sm:text-4xl font-semibold text-emerald-900">
-              Submit Materials
-            </h1>
+            <h1 className="text-3xl sm:text-4xl font-semibold text-emerald-900">Submit Materials</h1>
             <p className="mt-2 text-emerald-900/80">
               Tell us what you’re donating. We’ll match it with the right artisan or recycler.
             </p>
@@ -349,6 +335,7 @@ const WasteSubmitPage: React.FC = () => {
                                           src={url}
                                           className="h-24 w-full rounded-md object-cover ring-1 ring-emerald-100"
                                           onLoad={() => URL.revokeObjectURL(url)}
+                                          alt=""
                                         />
                                         <button
                                           type="button"
@@ -399,7 +386,8 @@ const WasteSubmitPage: React.FC = () => {
                           <div className="space-y-0.5">
                             <FormLabel>Pickup requested?</FormLabel>
                             <p className="text-xs text-emerald-900/70">
-                              Turn on to request a pickup (serviceable areas only). If serviceable, our backend will allocate a slot and notify you by email/SMS.
+                              Turn on to request a pickup (serviceable areas only). If serviceable, our backend will
+                              allocate a slot and notify you by email/SMS.
                             </p>
                           </div>
                           <FormControl>
@@ -483,7 +471,6 @@ const WasteSubmitPage: React.FC = () => {
                           )}
                         />
 
-                        {/* Since backend allocates schedule automatically when serviceable */}
                         {pinStatus === "ok" && (
                           <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-900">
                             Pickup is <span className="font-medium">serviceable{pinRegion ? ` in ${pinRegion}` : ""}</span>.
@@ -531,19 +518,13 @@ const WasteSubmitPage: React.FC = () => {
             <div className="hidden lg:block">
               <Card className="sticky top-20 overflow-hidden ring-1 ring-emerald-100">
                 <CardContent className="p-0">
-                  <img
-                    src={wasteHero}
-                    alt="Donate materials"
-                    className="block h-full w-full object-cover"
-                  />
+                  <img src={wasteHero} alt="Donate materials" className="block h-full w-full object-cover" />
                 </CardContent>
               </Card>
 
               <Card className="mt-4 ring-1 ring-emerald-100">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-lg text-emerald-900">
-                    Tips for faster processing
-                  </CardTitle>
+                  <CardTitle className="text-lg text-emerald-900">Tips for faster processing</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <ul className="list-disc pl-5 text-sm text-emerald-900/85 space-y-1.5">

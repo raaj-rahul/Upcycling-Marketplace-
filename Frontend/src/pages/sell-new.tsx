@@ -20,19 +20,20 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 
+// Sonner toast (shadcn/use-toast is deprecated)
+import { toast } from "sonner";
+
+// types + product helpers
+import type { Product } from "@/lib/shop";
+import { addUserProduct } from "@/lib/products";
+
 // ---------- schema ----------
 const MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
-const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const ACCEPTED_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 const schema = z.object({
   productName: z.string().min(2, "Name is too short"),
@@ -48,20 +49,19 @@ const schema = z.object({
   materials: z.string().min(2, "Tell buyers what it’s made of"),
   description: z.string().min(10, "Add a brief description"),
   productPhoto: z
-    .custom<FileList>()
-    .refine((files) => files && files.length > 0, "Please add a product photo")
-    .refine(
-      (files) => files && ACCEPTED_TYPES.includes(files[0]?.type),
-      "Supported formats: PNG, JPG, WEBP"
-    )
-    .refine((files) => files && files[0].size <= MAX_IMAGE_SIZE, "Max size 3MB"),
+    .instanceof(FileList, { message: "Please add a product photo" })
+    .refine((files) => files.length > 0, "Please add a product photo")
+    .refine((files) => ACCEPTED_TYPES.has(files[0]?.type ?? ""), "Supported formats: PNG, JPG, WEBP")
+    .refine((files) => (files[0]?.size ?? 0) <= MAX_IMAGE_SIZE, "Max size 3MB"),
   allowReturns: z.boolean().default(false),
 });
 
-type FormValues = z.infer<typeof schema>;
+// Align RHF with zodResolver (input vs output)
+type SellFormInput = z.input<typeof schema>;
+type SellFormOutput = z.output<typeof schema>;
 
 // ---------- helpers ----------
-// INR currency formatter
+// INR currency formatter for preview
 const fmt = (n: string) => {
   const v = Number(n);
   if (Number.isNaN(v)) return "";
@@ -72,11 +72,22 @@ const fmt = (n: string) => {
   }).format(v);
 };
 
+// read file -> data URL (so Buy page can show it instantly)
+async function fileToDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Failed to read image"));
+    reader.onload = () => resolve(String(reader.result));
+    reader.readAsDataURL(file);
+  });
+}
+
 const SellNew: React.FC = () => {
   const navigate = useNavigate();
   const [preview, setPreview] = React.useState<string | null>(null);
 
-  const form = useForm<FormValues>({
+  // Lock RHF generics with input/output to match zodResolver
+  const form = useForm<SellFormInput, any, SellFormOutput>({
     resolver: zodResolver(schema),
     defaultValues: {
       productName: "",
@@ -88,8 +99,7 @@ const SellNew: React.FC = () => {
       materials: "",
       description: "",
       allowReturns: true,
-      // productPhoto handled by file input
-    } as any,
+    },
     mode: "onChange",
   });
 
@@ -106,21 +116,44 @@ const SellNew: React.FC = () => {
     return () => URL.revokeObjectURL(url);
   }, [watchPhoto]);
 
-  const onSubmit = (values: FormValues) => {
-    // For prototype: log & navigate
-    console.log("Submitting product:", {
-      ...values,
-      price: Number(values.price),
-      quantity: Number(values.quantity),
-      productPhoto: values.productPhoto?.[0]?.name,
-    });
-    alert("Product created! (prototype)");
-    navigate("/sell");
+  const onSubmit = async (values: SellFormOutput) => {
+    try {
+      const file = values.productPhoto?.[0];
+      const dataUrl = file ? await fileToDataURL(file) : "";
+
+      // Build a Product for the frontend-only listing
+      const newProduct: Product = {
+        id: Date.now(), // simple unique id
+        name: values.productName,
+        image: dataUrl, // data URL lets it render instantly on Buy page
+        price: new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+          maximumFractionDigits: 0,
+        }).format(Number(values.price || 0)),
+        quality: "Good", // you can map from category if you like
+        location: values.location,
+        description: values.description,
+        rating: 4.7,
+        stock: Number(values.quantity || "1"),
+      };
+
+      addUserProduct(newProduct);
+
+      toast.success("Product listed!", {
+        description: "Your upcycled creation is now visible in Buy Products.",
+      });
+
+      navigate("/buy");
+    } catch (err) {
+      toast.error("Upload failed", {
+        description: "We couldn’t save your listing image. Please try again.",
+      });
+    }
   };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(60%_60%_at_50%_0%,#E8F7EF_0%,#ffffff_60%)]">
-
       <Header />
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -165,10 +198,11 @@ const SellNew: React.FC = () => {
                                 <input
                                   id="product-photo"
                                   type="file"
-                                  accept="image/png,image/jpeg,image/webp"
+                                  accept={Array.from(ACCEPTED_TYPES).join(",")}
                                   className="hidden"
                                   onChange={(e) => {
-                                    field.onChange(e.target.files as any);
+                                    const files = e.target.files as FileList | null;
+                                    if (files) field.onChange(files);
                                   }}
                                 />
                                 <FormDescription className="text-emerald-900/70">
@@ -182,11 +216,7 @@ const SellNew: React.FC = () => {
                       />
                       {preview && (
                         <div className="mt-3 rounded-lg border border-emerald-100 bg-white p-2">
-                          <img
-                            src={preview}
-                            alt="Preview"
-                            className="mx-auto block h-48 w-auto object-contain"
-                          />
+                          <img src={preview} alt="Preview" className="mx-auto block h-48 w-auto object-contain" />
                         </div>
                       )}
                     </div>
@@ -304,7 +334,10 @@ const SellNew: React.FC = () => {
                         <FormItem className="md:col-span-2">
                           <FormLabel>Materials used</FormLabel>
                           <FormControl>
-                            <Input placeholder="Denim offcuts, cotton lining, recycled buttons…" {...field} />
+                            <Input
+                              placeholder="Denim offcuts, cotton lining, recycled buttons…"
+                              {...field}
+                            />
                           </FormControl>
                           <FormDescription className="text-emerald-900/70">
                             Tell buyers what the item is made from.
