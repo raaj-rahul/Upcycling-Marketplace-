@@ -7,21 +7,26 @@ import heroIllustration from "@/assets/hero-illustration.png";
 import { useNavigate } from "react-router-dom";
 
 const Home: React.FC = () => {
-  const navigate = useNavigate(); // ✅ for redirect
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-emerald-50">
+    <div className="min-h-screen relative bg-[radial-gradient(60%_60%_at_50%_0%,#E8F7EF_0%,#ffffff_60%)]">
       <Header />
 
-      {/* HERO */}
+      {/* soft background blobs */}
+      <div aria-hidden className="pointer-events-none absolute -top-10 -right-10 h-52 w-52 rounded-full bg-emerald-200/40 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute bottom-0 -left-8 h-40 w-40 rounded-full bg-emerald-300/40 blur-3xl" />
+
       <main>
+        {/* HERO */}
         <section className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="mt-8 rounded-2xl border-emerald-100 bg-white shadow-sm">
+          <Card className="mt-8 rounded-2xl border border-emerald-100/60 bg-white/80 backdrop-blur-[2px] shadow-md ring-1 ring-emerald-100/60">
             <CardContent className="grid gap-10 p-6 sm:p-10 lg:grid-cols-12 lg:gap-12">
               {/* Copy */}
               <div className="order-2 max-w-prose lg:order-1 lg:col-span-6">
                 <h1 className="font-serif text-3xl font-extrabold leading-tight text-emerald-900 sm:text-4xl lg:text-5xl">
-                  Waste Less. Create More.
+                  Waste Less.
+                  <br />Create More.
                 </h1>
 
                 <p className="mt-4 italic text-emerald-900/90">
@@ -34,7 +39,6 @@ const Home: React.FC = () => {
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-3">
-                  {/* ✅ Buy Route */}
                   <Button
                     className="bg-emerald-700 hover:bg-emerald-800"
                     onClick={() => navigate("/buy")}
@@ -42,7 +46,6 @@ const Home: React.FC = () => {
                     Explore Products
                   </Button>
 
-                  {/* ✅ Sell Route */}
                   <Button
                     variant="outline"
                     className="border-emerald-700 text-emerald-900 hover:bg-emerald-50"
@@ -55,13 +58,16 @@ const Home: React.FC = () => {
 
               {/* Illustration */}
               <div className="order-1 lg:order-2 lg:col-span-6">
-                <div className="relative mx-auto w-full max-w-[560px] overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/60 shadow-sm">
+                <div className="relative mx-auto w-full max-w-[560px] overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/70 shadow-sm">
                   <img
                     src={heroIllustration}
                     alt="Sustainable crafting illustration"
                     className="block h-auto w-full object-contain"
                   />
-                  <div className="pointer-events-none absolute -inset-2 rounded-3xl bg-gradient-to-tr from-transparent via-transparent to-emerald-100/40" />
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute -inset-2 rounded-3xl bg-gradient-to-tr from-transparent via-transparent to-emerald-100/40"
+                  />
                 </div>
               </div>
             </CardContent>
@@ -70,7 +76,7 @@ const Home: React.FC = () => {
 
         {/* FEATURES */}
         <section className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mt-12 grid gap-4 rounded-xl border border-emerald-100 bg-white/70 p-4 sm:grid-cols-3 sm:p-6">
+          <div className="mt-12 grid gap-4 rounded-xl border border-emerald-100/70 bg-white/70 backdrop-blur-[1px] p-4 sm:grid-cols-3 sm:p-6">
             <Feature icon="♻️" title="Upcycled Only" desc="Every product is reborn from pre-loved materials." />
             <Feature icon="🤝" title="Fair to Artisans" desc="Direct partnerships with local makers." />
             <Feature icon="🌱" title="Planet-Positive" desc="Low-impact processes and packaging." />
@@ -78,7 +84,7 @@ const Home: React.FC = () => {
         </section>
 
         {/* FOOTER */}
-        <footer className="mt-16 border-t bg-white">
+        <footer className="mt-16 border-t bg-white/80 backdrop-blur-sm">
           <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 py-6 sm:flex-row sm:px-6 lg:px-8">
             <p className="text-sm text-emerald-900/70">© {new Date().getFullYear()} ReCraft</p>
             <div className="flex items-center gap-6 text-sm text-emerald-900/80">

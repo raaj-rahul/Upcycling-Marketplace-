@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import recraftLogo from "@/assets/recraft-logo.png";
-import { User, Heart, ShoppingCart } from "lucide-react";
+import { User, Heart, ShoppingCart } from "lucide-react"; // ✅ Removed Recycle icon
 
 type HeaderProps = {
   showActions?: boolean;
@@ -31,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({ showActions = true, className = "" }) =
   return (
     <header className={`border-b bg-white/80 backdrop-blur ${className}`}>
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        
+
         {/* ✅ Brand */}
         <Link to="/" className="flex items-center gap-2 hover:opacity-90">
           <img
@@ -50,10 +50,16 @@ const Header: React.FC<HeaderProps> = ({ showActions = true, className = "" }) =
           <Separator orientation="vertical" className="h-5 bg-emerald-900/20" />
           <NavItem to="/buy" label="Buy Products" /> {/* ✅ Working route */}
           <Separator orientation="vertical" className="h-5 bg-emerald-900/20" />
+
+          {/* ✅ Sell Products FIRST now */}
           <NavItem to="/sell" label="Sell Products" />
+          <Separator orientation="vertical" className="h-5 bg-emerald-900/20" />
+
+          {/* ✅ Waste Donation NEXT */}
+          <NavItem to="/waste-donation" label="Waste Donation" />
         </nav>
 
-        {/* ✅ Right side */}
+        {/* ✅ Right Side */}
         <div className="hidden items-center gap-4 sm:flex">
           {!isAuthed && showActions ? (
             <>
