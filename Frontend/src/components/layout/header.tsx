@@ -1,8 +1,7 @@
-// src/components/layout/header.tsx
 import React from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator"; // ✅ using shadcn separator
+import { Separator } from "@/components/ui/separator";
 import recraftLogo from "@/assets/recraft-logo.png";
 import { User, Heart, ShoppingCart } from "lucide-react";
 
@@ -49,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({ showActions = true, className = "" }) =
           <Separator orientation="vertical" className="h-5 bg-emerald-900/20" />
           <NavItem to="/about" label="About" />
           <Separator orientation="vertical" className="h-5 bg-emerald-900/20" />
-          <NavItem to="/buy" label="Buy Products" />
+          <NavItem to="/buy" label="Buy Products" /> {/* ✅ Working route */}
           <Separator orientation="vertical" className="h-5 bg-emerald-900/20" />
           <NavItem to="/sell" label="Sell Products" />
         </nav>
@@ -96,7 +95,9 @@ const NavItem = ({ to, label }: { to: string; label: string }) => (
     end
     className={({ isActive }) =>
       `hover:text-emerald-700 ${
-        isActive ? "font-semibold text-emerald-900 border-b-2 border-emerald-700 pb-1" : "text-emerald-900"
+        isActive
+          ? "font-semibold text-emerald-900 border-b-2 border-emerald-700 pb-1"
+          : "text-emerald-900"
       }`
     }
   >
