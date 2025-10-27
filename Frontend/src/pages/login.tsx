@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "@/assets/recraft-logo.png";
 import { toast } from "sonner";
 import { loginUser } from "@/lib/auth";
+import { FaArrowLeft } from "react-icons/fa";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -32,6 +33,15 @@ const Login: React.FC = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-emerald-50">
+            {/* Back to Home Button */}
+            <Button
+              variant="outline"
+              onClick={() => navigate("/")}
+              className="absolute top-6 left-6 flex items-center gap-2 border-gray-400 text-gray-700 hover:bg-gray-100"
+            >
+              <FaArrowLeft size={14} />
+              Home
+            </Button>
       <div className="flex w-full max-w-5xl overflow-hidden rounded-lg shadow-lg sm:flex-row flex-col">
         {/* Left Panel */}
         <div className="relative flex flex-1 flex-col items-center justify-center bg-white p-8 sm:p-12">

@@ -36,7 +36,7 @@ const WasteDonationPage: React.FC = () => {
           <div>
             <h1 className="text-[28px] sm:text-4xl lg:text-[40px] font-semibold text-emerald-900 leading-tight">
               DON'T THROW IT AWAY—
-              <span className="underline decoration-emerald-400 underline-offset-8">
+              <span className=" decoration-emerald-400 underline-offset-8">
                 {" "}GIVE IT A NEW STORY.
               </span>
             </h1>

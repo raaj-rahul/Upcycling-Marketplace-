@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/recraft-logo.png";
 import { toast } from "sonner";
+import { FaArrowLeft } from "react-icons/fa"; // <-- add this import
 import { registerUser } from "@/lib/auth";
 
 const Signup: React.FC = () => {
@@ -32,7 +33,17 @@ const Signup: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-emerald-50">
+    <div className="flex min-h-screen items-center justify-center bg-emerald-50 relative">
+      {/* Back to Home Button */}
+      <Button
+        variant="outline"
+        onClick={() => navigate("/")}
+        className="absolute top-6 left-6 flex items-center gap-2 border-gray-400 text-gray-700 hover:bg-gray-100"
+      >
+        <FaArrowLeft size={14} />
+        Home
+      </Button>
+
       <div className="flex w-full max-w-5xl shadow-lg rounded-lg overflow-hidden sm:flex-row flex-col">
         {/* Left Panel */}
         <div className="relative flex flex-1 flex-col justify-center bg-emerald-200 p-8 sm:p-12">
@@ -64,7 +75,9 @@ const Signup: React.FC = () => {
               />
             </div>
             <div>
-              <Label className="text-sm font-semibold text-black">Password</Label>
+              <Label className="text-sm font-semibold text-black">
+                Password
+              </Label>
               <Input
                 type="password"
                 placeholder="Enter your password"
@@ -88,7 +101,7 @@ const Signup: React.FC = () => {
 
         {/* Right Panel */}
         <div className="relative flex flex-1 flex-col items-center justify-center bg-white p-8 sm:p-12">
-          {/* Logo and Brand Top-Right on desktop, top on mobile */}
+          {/* Logo and Brand */}
           <div className="absolute top-6 right-8 sm:flex items-center space-x-3 hidden">
             <span className="text-3xl font-bold text-black">ReCraft</span>
             <img src={logo} alt="ReCraft Logo" className="h-14 w-14" />
